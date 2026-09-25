@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App | Simple Task Manager & To-Do List</title>
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="A simple and responsive Todo App to create, manage, complete, and organize your daily tasks efficiently. Stay productive with an easy-to-use task manager." />
+    <meta name="keywords" content="todo app, todo list, to do list, task manager, task management app, daily tasks, productivity app, online todo app, task tracker" />
+    <meta name="author" content="Abhishek Sharma" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-zinc-950 px-4">
+            <div class="flex items-center justify-between w-full h-25">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-violet-500/50">
+                        📝
+                    </div>
+                    <div>
+                        <h1 class="title-font text-2xl font-semibold tracking-tighter">Todo App</h1>
+                        <p class="text-zinc-500 text-sm -mt-1">get things done</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div id="stats" class="text-sm text-zinc-400 flex items-center gap-3">
+                        <div><span id="active-count" class="text-violet-400 font-medium">0</span> active</div>
+                        <div><span id="completed-count" class="font-medium">0</span> done</div>
+                    </div>
+
+                    <button onclick="clearCompleted()" 
+                            class="px-2 py-2 text-sm text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-2xl transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-trash"></i>
+                        <span>Clear done</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        
+        <main class="min-h-[calc(100vh-160px)] p-4">
+            <!-- Add Task -->
+            <div class="bg-zinc-900 h-20 rounded-3xl p-2 mb-8 shadow-xl">
+                <div class="relative flex items-center pr-1 gap-3 h-full">
+                    <input 
+                        id="task-input"
+                        type="text" 
+                        placeholder="What needs to be done?"
+                        class="todo-input flex-1 bg-transparent px-6 py-4 text-lg outline-none placeholder-zinc-500 rounded-2xl"
+                        onkeypress="if(event.key === 'Enter') addTask()"
+                    >
+                    
+                    <button onclick="addTask()"
+                            class="bg-violet-600 hover:bg-violet-500 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all active:scale-95">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tasks List -->
+            <div id="task-list" class="space-y-3 min-h-50"></div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center empty-state">
+                <div class="text-7xl mb-6">🌊</div>
+                <h3 class="text-2xl font-medium text-zinc-300 mb-2">All caught up!</h3>
+                <p class="text-zinc-500 max-w-xs">Your tasks will appear here. Add one above to get started.</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full h-15">
+            <div class="h-full flex justify-center items-center text-center">
+                <div class="inline-flex items-center gap-2 text-xs text-zinc-500">
+                    <span>Made with</span>
+                    <span>Abhishek Sharma</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        
+        const saveTasks = () => {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        
+        const createTaskElement = (task) => {
+            const div = document.createElement('div');
+            div.className = `relative task-item group bg-zinc-900 rounded-3xl p-5 w-full min-h-20 flex items-center gap-4 ${task.completed ? 'completed' : ''}`;
+            div.dataset.id = task.id;
+            
+            div.innerHTML = `
+                <button onclick="toggleComplete(${task.id})"
+                        class="w-7 h-7 rounded-2xl border-2 flex-shrink-0 flex items-center justify-center transition-all check-circle
+                        ${task.completed ? 'bg-emerald-800 border-emerald-500' : 'border-zinc-400 group-hover:border-violet-400'}" >
+                    ${task.completed ? '<i class="fa-solid fa-check text-white text-sm"></i>' : ''}
+                </button>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="text-lg break-words overflow-wrap-anywhere ${task.completed ? 'line-through text-zinc-400' : 'text-white'}">
+                        ${task.text}
+                    </div>
+                    ${task.createdAt ? `<div class="text-xs text-zinc-500 mt-1">${new Date(task.createdAt).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>` : ''}
+                </div>
+                
+                <div class="flex gap-2 transition-all">
+                    <button onclick="editTask(${task.id})" 
+                            class="w-9 h-9 hover:bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 hover:text-amber-400">
+                        <i class="fa-solid fa-pen text-sm"></i>
+                    </button>
+
+                    <button onclick="deleteTask(${task.id})" 
+                            class="w-9 h-9 hover:bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 hover:text-red-400">
+                        <i class="fa-solid fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+            
+            return div;
+        }
+ 
+        const renderTasks = () => {
+            const container = document.getElementById('task-list');
+            container.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                updateStats();
+                return;
+            }
+            
+            document.getElementById('empty-state').classList.add('hidden');
+            
+            // Sort: incomplete first, then by creation date
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.completed === b.completed) {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+                return a.completed ? 1 : -1;
+            });
+            
+            sortedTasks.forEach(task => {
+                container.appendChild(createTaskElement(task));
+            });
+            
+            updateStats();
+        }
+      
+        const updateStats = () => {
+            const active = tasks.filter(t => !t.completed).length;
+            const completed = tasks.filter(t => t.completed).length;
+            
+            document.getElementById('active-count').textContent = active;
+            document.getElementById('completed-count').textContent = completed;
+        }
+        
+        const addTask = () => {
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+
+            if(!text) return;
+
+            const newTask = {
+                id : Date.now(),
+                text : text,
+                completed : false,
+                createdAt : new Date().toISOString()
+            };
+
+            tasks.unshift(newTask);
+            saveTasks();
+            renderTasks();
+
+            input.value = '';
+            input.focus();
+        }
+        
+        const toggleComplete = (id) => {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            
+            task.completed = !task.completed;
+            saveTasks();
+            renderTasks();
+            
+            if (task.completed) {
+                createParticles();
+            }
+        }
+        
+        const deleteTask = (id) => {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+        
+        const editTask = (id) => {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            
+            const newText = prompt('Edit task:', task.text);
+            if (newText === null || newText.trim() === '') return;
+            
+            task.text = newText.trim();
+            saveTasks();
+            renderTasks();
+        }
+        
+        const clearCompleted = () => {
+            if (confirm('Clear all completed tasks?')) {
+                tasks = tasks.filter(t => !t.completed);
+                saveTasks();
+                renderTasks();
+            }
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && document.getElementById('task-input') !== document.activeElement) {
+                e.preventDefault();
+                document.getElementById('task-input').focus();
+            }
+        });
+        
+        // Initialize
+        window.onload = function() {
+            renderTasks();
+            
+            // Tailwind script already loaded
+            console.log('%cFlow Todo ready ✨', 'color: #a5b4fc; font-size: 13px;');
+        };
+    </script>
+</body>
+</html>
