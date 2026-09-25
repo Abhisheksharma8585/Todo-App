@@ -12,10 +12,6 @@ A simple, modern, and responsive **Todo App** built with **HTML, CSS, and JavaSc
 
 ![Todo App Laptop Preview](./images/Laptop.png)
 
-### 📱 Mobile
-
-![Todo App Mobile Preview](./images/Phone.jpeg)
-
 ## ✨ Features
 
 * ➕ Add new tasks
